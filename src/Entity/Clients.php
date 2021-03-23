@@ -42,7 +42,7 @@ class Clients
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"transactionCNI:read"})
+     * @Groups({"transactionCNI:read","transactionuser:read"})
      * 
      */
     private $nomCompletClient;
@@ -53,6 +53,7 @@ class Clients
      * @Assert\Length(min=9)
      * @Assert\NotNull
      * @ORM\Column(type="string", length=255)
+     * @Groups({"transactionuser:read"})
      */
     private $telephone;
 
@@ -63,6 +64,7 @@ class Clients
      * @Assert\Type(
      *     type="integer",
      *     message="le veleur {{ value }} no valider {{ type }}.")
+     * @Groups({"transactionuser:read"})
      * 
      */
     private $numero_cni;

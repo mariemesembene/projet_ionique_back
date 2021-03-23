@@ -28,11 +28,33 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *             
  *              
  *          },
- *         
  *          
+ *  "get_roles"={ 
+ *              "method"="GET",
+ *              "path"="/admin/user/roles",
+ *             
+ *              
+ *          },
+ *         
+ *          "getusers"={
+ *              "normalization_context" ={"groups" ={"getuser:read"}},  
+ *              "method"="GET",
+ *              "path"="/user",
+ *             
+ *              
+ *          },
  *       },
- *      itemOperations={
- *          "get_user-id"={
+ *  itemOperations={
+ *         
+ *           "get_user-transaction"={
+ *              "normalization_context" ={"groups" ={"transactioniduser:read"}},     
+ *              "method"="GET", 
+ *              "path"="/user/{id}/transactions",
+ *              
+ * 
+ * 
+ *          },
+ *  "get_user-id"={
  *              "normalization_context" ={"groups" ={"getuser:read"}},     
  *              "method"="GET", 
  *              "path"="/admin/user/{id}",
@@ -40,7 +62,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * 
  * 
  *          },
- *     "delete_user"={
+ *          "delete_user"={
  *                 "method"="DELETE",
  *                 "path"="admin/user/{id}",
  *                 
@@ -57,13 +79,13 @@ class User implements UserInterface
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      * @Groups({"transaction:write"})
-     *  @Groups({"getuser:read","agence:read","caissier:read","bloqueruser:read"})
+     *  @Groups({"getuser:read","getRetraitTransByIdUser","transactioniduser:read","agence:read","transactionuser:read","caissier:read","bloqueruser:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
-     * @Groups({"transaction:write","getuser:read","agence:read","caissier:read"})
+     * @Groups({"transaction:write","getRetraitTransByIdUser","getDepotTransByIdUser","transactioniduser:read","transactionuser:read","getuser:read","agence:read","caissier:read"})
      */
     private $email;
 
@@ -86,7 +108,7 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"transaction:write","getuser:read","agence:read","caissier:read"})
+     * @Groups({"transaction:write","transactioniduser:read","getuser:read","agence:read","caissier:read"})
      */
     private $prenom;
 
@@ -110,7 +132,7 @@ class User implements UserInterface
 
     /**
      * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="user")
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","transactioniduser:read","transactionuser:read"})
      */
     private $transactions;
 
@@ -122,7 +144,7 @@ class User implements UserInterface
 
     /**
      * @ORM\OneToMany(targetEntity=Transaction::class, mappedBy="userRetrait")
-     * @Groups({"transaction:write"})
+     * @Groups({"transaction:write","transactioniduser:read"})
      */
     private $transactionRetrait;
 
@@ -165,10 +187,9 @@ class User implements UserInterface
      */
     public function getRoles(): array
     {
-        $roles = $this->roles;
+     
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
+        $roles[] = 'ROLE_'.$this->rolesEntity->getLibelle();
         return array_unique($roles);
     }
 

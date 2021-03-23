@@ -38,22 +38,25 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
  *              
  *          },
  *          
+ *          
  *       },
  *      itemOperations={
- *          "get_user-transaction"={
- *              "normalization_context" ={"groups" ={"transactionuser:read"}},     
- *              "method"="GET", 
- *              "path"="/user/{id}/transactions",
- *              
- * 
- * 
- *          },
+ *          
  *    "put_transactin"={
  *              "method"="PUT",
  *              "path"="/user/transactions/{id}",
  *              "denormalization_context" ={"groups" ={"transactionretrait:write"}},
  *              
  *          },
+ *    "getuser"={
+ *              "normalization_context" ={"groups" ={"transactioniduser:read"}},     
+ *              "method"="GET",
+ *              "path"="/user/transactions",
+ *              
+ * 
+ * 
+ *          },
+ * 
  *       
  *               
  *    }
@@ -68,22 +71,22 @@ class Transaction
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"transactionuser:read","transactionretrait:write","transactionmontant:read"})
-     * @Groups({"transactioncompte:read","parts:read"})
+     * @Groups({"transactionuser:read","transactionretrait:write","transactionretrait:write","transactionmontant:read"})
+     * @Groups({"transactioncompte:read","getRetraitTransByIdUser","getDepotTransByIdUser","transactioniduser:read","parts:read","transactionuser:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="integer")
      * @Groups({"transaction:write","transactionmontant:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","getDepotTransByIdUser","getRetraitTransByIdUser","transactioniduser:read","transactionuser:read"})
      */
     private $montant;
 
     /**
      * @ORM\Column(type="date",nullable=true)
      * @Groups({"transactionuser:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","getDepotTransByIdUser","transactioniduser:read","transactionuser:read"})
      * 
      */
     private $date_depot;
@@ -91,13 +94,13 @@ class Transaction
     /**
      * @ORM\Column(type="date",nullable=true)
      * @Groups({"transactionuser:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","getDepotTransByIdUser","transactioniduser:read","transactionuser:read"})
      */
     private $date_retrait;
 
     /**
      * @ORM\Column(type="string", length=255,nullable=true)
-     * @Groups({"transactionretrait:write"})
+     * @Groups({"transactionretrait:write","getRetraitTransByIdUser","getDepotTransByIdUser","transactioniduser:read","transactionuser:read"})
      * 
      */
     private $code_transaction;
@@ -105,7 +108,7 @@ class Transaction
     /**
      * @ORM\Column(type="integer",nullable=true)
      *  @Groups({"transactionmontant:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","getRetraitTransByIdUser","getDepotTransByIdUser","getDepotTransByIdUser","transactioniduser:read","transactionuser:read"})
      */
     private $frais;
 
@@ -113,7 +116,7 @@ class Transaction
      * @ORM\Column(type="integer",nullable=true)
      * @Groups({"transaction:write"})
      * @Groups({"transactionmontant:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","transactioniduser:read","transactionuser:read"})
      */
     private $frais_depot;
 
@@ -121,7 +124,7 @@ class Transaction
      * @ORM\Column(type="integer",nullable=true)
      * @Groups({"transaction:write"})
      * @Groups({"transactionmontant:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","getRetraitTransByIdUser","transactioniduser:read","transactionuser:read"})
      */
     private $frais_retrait;
 
@@ -129,20 +132,20 @@ class Transaction
      * @ORM\Column(type="integer",nullable=true)
      * @Groups({"transaction:write"})
      * @Groups({"transactionmontant:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","transactioniduser:read","transactionuser:read"})
      */
     private $frais_etat;
 
     /**
      * @ORM\Column(type="integer",nullable=true)
      * @Groups({"transactionmontant:read"})
-     * @Groups({"transactioncompte:read"})
+     * @Groups({"transactioncompte:read","transactioniduser:read","transactionuser:read"})
      */
     private $frais_system;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transactions")
-     * @Groups({"transaction:write","transactionuser:read"})
+     * @Groups({"transaction:write","getDepotTransByIdUser","getRetraitTransByIdUser"})
      *
      *
      */
@@ -156,20 +159,20 @@ class Transaction
 
     /**
      * @ORM\ManyToOne(targetEntity=Clients::class, inversedBy="transactions",cascade={"persist"})
-     *  @Groups({"transaction:write","transactionCNI:read"})
+     *  @Groups({"transaction:write","transactionCNI:read","transactionuser:read"})
      * 
      */
     private $clients;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="transactionRetrait")
-     * @Groups({"transaction:write","transactionuser:read"})
+     * @Groups({"transaction:write","getRetraitTransByIdUser","transactionuser:read"})
      */
     private $userRetrait;
 
     /**
      * @ORM\ManyToOne(targetEntity=Clients::class, inversedBy="transactionsclientsRetrait",cascade={"persist"})
-     * @Groups({"transaction:write","transactionCNI:read"})
+     * @Groups({"transaction:write","getRetraitTransByIdUser","transactionCNI:read","transactionuser:read"})
      */
     private $clientsRetrait;
 
@@ -179,6 +182,12 @@ class Transaction
      *  @Groups({"transaction:write"})
      */
     private $comptesRetrait;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     *  @Groups({"transactionuser:read","getRetraitTransByIdUser"})
+     */
+    private $isRetired;
 
     public function __construct()
     {
@@ -370,6 +379,18 @@ class Transaction
     public function setComptesRetrait(?Comptes $comptesRetrait): self
     {
         $this->comptesRetrait = $comptesRetrait;
+
+        return $this;
+    }
+
+    public function getIsRetired(): ?bool
+    {
+        return $this->isRetired;
+    }
+
+    public function setIsRetired(?bool $isRetired): self
+    {
+        $this->isRetired = $isRetired;
 
         return $this;
     }

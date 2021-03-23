@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Transaction;
+use App\Entity\User;
 use Doctrine\ORM\EntityManager;
 use App\services\TransactionService;
 use App\Repository\ClientsRepository;
 use App\Repository\ComptesRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\TransactionRepository;
+use App\Repository\UserRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -73,7 +75,7 @@ class TransactionController extends AbstractController
      */
     public function putransaction (Request $request, EntityManagerInterface $manager, ComptesRepository $comptesretrait, SerializerInterface $serialize ,TransactionService $service,TransactionRepository $transrepo, ClientsRepository $clientrepo,$id )
     {
-        
+       
         $transactionjson=$request->getContent();
        
       $transactiontab=$serialize->decode($transactionjson,"json");
@@ -85,6 +87,8 @@ class TransactionController extends AbstractController
     $transaction->setComptesRetrait($comptesobjet);
     $transaction->setUserRetrait($this->get('security.token_storage')->getToken()->getUser());
     $transaction->setDateRetrait(new \DateTime());
+    $transaction->setIsRetired( $this->isRetired=true) ;
+   
         $manager->persist($transaction);
         $manager->flush();
     
@@ -104,8 +108,41 @@ class TransactionController extends AbstractController
      */
     public function FraisForMontant(Request $request,SerializerInterface $serializer,EntityManagerInterface $manager,TransactionService $service)
     {
-        $Montant_tab = $serializer->decode($request->getContent(),"json");
-        $frais=$service->calculeFraisTotal($Montant_tab['montant']);
+        $montant=$request->get('montant');
+        $frais=$service->calculeFraisTotal($montant);
         return $this -> json($frais, Response::HTTP_OK,);
     }
+
+
+/**   
+    * @Route(path="/api/user/{id}/depotTransactions",
+    * name="getDepotTransByIdUser", methods={"GET"}) 
+    */
+ public function getDepotTransByIdUser($id, SerializerInterface $serializer, UserRepository $usersRepo, TransactionRepository $transRepo) 
+        { $user = new User(); 
+
+        { $user = $usersRepo->findOneBy([ "id" => $id ]);
+        if (!$user)
+        { return $this->json( ["message" => "Désolé, mais ce user n'existe pas."], Response::HTTP_FORBIDDEN );
+        }
+          $depotTransactions = $transRepo->findBy([ "user" => $id ]); 
+         array_multisort($depotTransactions);
+ return $this->json($depotTransactions, 200, [], ["groups" => ["getDepotTransByIdUser"]]); }
+    }
+/** 
+    *@Route(path="/api/user/{id}/retraitTransactions", 
+    *   name="getRetraitTransByIdUser", methods={"GET"}) 
+    */
+     public function getRetraitTransByIdUser($id, SerializerInterface $serializer, UserRepository $usersRepo, TransactionRepository $transRepo)
+     { $user = new User(); 
+
+        { $user = $usersRepo->findOneBy([ "id" => $id ]);
+        if (!$user)
+        { return $this->json( ["message" => "Désolé, mais ce user n'existe pas."], Response::HTTP_FORBIDDEN );
+        }
+          $retraitTransactions = $transRepo->findBy([ "userRetrait" => $id ]); 
+         array_multisort($retraitTransactions);
+ return $this->json($retraitTransactions, 200, [], ["groups" => ["getRetraitTransByIdUser"]]); }
+    }
+    
 }
